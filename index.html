@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rent or Buy, Mate?</title>
+<meta name="description" content="Five questions to work out if you should keep renting AI from OpenAI, Anthropic and Google, or buy your own GPUs.">
+<meta property="og:title" content="Pay for LLMs, or buy GPUs?">
+<meta property="og:description" content="Five questions. One verdict. Closed LLM APIs, open-weight models, or your own GPUs.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect x=%271%27 y=%271%27 width=%2714%27 height=%279%27 fill=%27%23fff%27 stroke=%27%2310233A%27/%3E%3Crect x=%271%27 y=%271%27 width=%2714%27 height=%273%27 fill=%27%2310233A%27/%3E%3Crect x=%273%27 y=%2710%27 width=%271.5%27 height=%276%27 fill=%27%2310233A%27/%3E%3Crect x=%2711.5%27 y=%2710%27 width=%271.5%27 height=%276%27 fill=%27%2310233A%27/%3E%3Crect x=%277%27 y=%275%27 width=%277%27 height=%273%27 fill=%27%23D7262E%27 transform=%27rotate(-12 10 6)%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --earth: #C63A1D;
+  --sky: #E6EFF3;
+  --card: #FFFFFF;
+  --ink: #10233A;
+  --muted: #536274;
+  --rule: #CBD6DD;
+  --red: #D7262E;
+  --gum: #2F6B4F;
+  --sun: #FFC72C;
+  --display: "Bricolage Grotesque", system-ui, sans-serif;
+  --body: "Schibsted Grotesk", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--earth); color: var(--ink); font: 400 17px/1.5 var(--body); }
+a { color: inherit; text-underline-offset: 3px; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.quiz :focus-visible { outline-color: var(--ink); }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 720px) { .wrap { padding: 0 24px; } }
+
+/* Hero */
+header.wrap { padding-top: 48px; padding-bottom: 28px; }
+@media (min-width: 720px) { header.wrap { padding-top: 80px; padding-bottom: 36px; } }
+h1 {
+  font: 800 clamp(52px, 11vw, 112px)/0.88 var(--display);
+  font-variation-settings: "wdth" 76;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--sun);
+  text-wrap: balance;
+}
+.lede { margin: 18px 0 0; font-size: 18px; color: rgba(255,255,255,.88); max-width: 52ch; }
+.lede b { color: #fff; font-weight: 700; }
+
+/* Quiz */
+.quiz { background: var(--card); border-radius: 8px; padding: 22px 18px 18px; box-shadow: 8px 8px 0 var(--ink); }
+@media (min-width: 720px) { .quiz { padding: 32px 32px 24px; } }
+.progress { display: flex; gap: 6px; margin-bottom: 20px; }
+.progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--rule); transition: background 300ms; }
+.progress i.done { background: var(--ink); }
+.step { font-size: 14px; color: var(--muted); margin: 0 0 4px; }
+.q {
+  font: 750 clamp(28px, 4.4vw, 38px)/1.04 var(--display);
+  font-variation-settings: "wdth" 82;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.hint { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+
+.tabs { display: inline-flex; background: var(--sky); border-radius: 999px; padding: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 500; }
+.tab[aria-selected="true"] { background: var(--ink); color: #fff; }
+
+.options { display: grid; gap: 8px; }
+.opt {
+  text-align: left; cursor: pointer;
+  background: var(--card);
+  border: 1.5px solid var(--rule);
+  border-radius: 6px; padding: 12px 14px;
+  display: grid; gap: 1px;
+}
+.opt:hover { border-color: var(--ink); }
+.opt[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.opt b { font-weight: 600; font-size: 16px; }
+.opt small { font-size: 14px; opacity: .72; }
+
+.bill { display: grid; gap: 10px; }
+.bill label { display: grid; grid-template-columns: 1fr 150px; align-items: center; gap: 12px; font-weight: 500; }
+.money-in { display: flex; align-items: center; border: 1.5px solid var(--rule); border-radius: 6px; padding: 0 10px; background: var(--card); }
+.money-in:focus-within { border-color: var(--ink); }
+.money-in span { color: var(--muted); }
+.money-in input { border: 0; outline: 0; width: 100%; padding: 10px 6px; background: transparent; text-align: right; font-variant-numeric: tabular-nums; }
+.bill-out { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.bill-out p { margin: 0; font-size: 15px; color: var(--muted); }
+.bill-out b { color: var(--ink); }
+.go { background: var(--ink); color: #fff; border: 0; border-radius: 6px; padding: 11px 18px; font-weight: 600; cursor: pointer; }
+.go[disabled] { opacity: .35; cursor: not-allowed; }
+
+.quiz-foot { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.link-btn { background: none; border: 0; padding: 6px 0; cursor: pointer; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.link-btn[disabled] { visibility: hidden; }
+
+/* Rent-to-buy meter */
+.meter { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--rule); }
+.meter-track { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--rule), var(--ink)); }
+.meter-dot {
+  position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  border-radius: 50%; background: var(--sun); border: 3px solid var(--ink);
+  transition: left 600ms cubic-bezier(.2,.8,.2,1), opacity 300ms;
+}
+.meter-labels { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; color: var(--muted); }
+.meter-labels b { color: var(--ink); font-weight: 600; }
+
+/* Verdict */
+.verdict { background: var(--ink); color: #fff; padding: 72px 0 64px; margin-top: 64px; }
+.verdict[hidden] { display: none; }
+.verdict-top { display: grid; gap: 28px; align-items: center; }
+@media (min-width: 720px) { .verdict-top { grid-template-columns: 280px 1fr; gap: 36px; } }
+
+.sign { position: relative; width: 260px; margin: 0 auto; padding-bottom: 70px; }
+.sign::before, .sign::after { content: ""; position: absolute; bottom: 0; width: 12px; height: 90px; background: #8A6A4A; }
+.sign::before { left: 40px; } .sign::after { right: 40px; }
+.board { position: relative; z-index: 1; background: #fff; color: var(--ink); border: 4px solid #fff; border-radius: 4px; overflow: hidden; }
+.board-band {
+  background: var(--ink); color: #fff; text-align: center; padding: 10px 8px 8px;
+  font: 800 30px/1 var(--display); font-variation-settings: "wdth" 75; letter-spacing: .01em;
+}
+.board-band.gum { background: var(--gum); }
+.board-body { padding: 14px 14px 30px; text-align: center; font-weight: 600; font-size: 15px; line-height: 1.3; min-height: 92px; display: grid; place-items: center; }
+.sticker {
+  position: absolute; z-index: 2; bottom: 52px; right: -24px;
+  background: var(--red); color: #fff; padding: 6px 14px 4px;
+  font: 800 28px/1 var(--display); font-variation-settings: "wdth" 75;
+  transform: rotate(-14deg); box-shadow: 0 2px 0 rgba(16,35,58,.25);
+  white-space: nowrap;
+}
+.sticker.slap { animation: slap 420ms cubic-bezier(.3,1.6,.5,1) both; animation-delay: 250ms; }
+@keyframes slap {
+  from { transform: rotate(-30deg) scale(2.4); opacity: 0; }
+  to { transform: rotate(-14deg) scale(1); opacity: 1; }
+}
+
+.answer {
+  color: var(--sun);
+  font: 800 clamp(48px, 9vw, 84px)/0.9 var(--display);
+  font-variation-settings: "wdth" 76;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.answer-say { font-size: 18px; margin: 0; max-width: 46ch; }
+
+.verdict-grid { display: grid; gap: 28px; margin-top: 44px; }
+@media (min-width: 720px) { .verdict-grid { grid-template-columns: 1fr 1fr; gap: 40px; } }
+.verdict h3 { font: 700 20px/1.2 var(--display); margin: 0 0 10px; }
+
+.statement { width: 100%; border-collapse: collapse; font-size: 16px; }
+.statement td { padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.18); vertical-align: top; }
+.statement td:last-child { text-align: right; white-space: nowrap; padding-left: 12px; font-weight: 600; }
+.statement td small { display: block; color: rgba(255,255,255,.62); font-size: 13.5px; }
+.statement tr.total td { border-bottom: 3px solid var(--sun); font-weight: 700; font-size: 18px; color: var(--sun); }
+.compare { margin: 12px 0 0; color: rgba(255,255,255,.7); font-size: 15px; }
+.compare b { color: #fff; }
+
+.why { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.why li { padding-left: 18px; position: relative; }
+.why li::before { content: ""; position: absolute; left: 0; top: .6em; width: 8px; height: 8px; border-radius: 50%; background: var(--sun); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+.btn { cursor: pointer; border-radius: 6px; padding: 12px 18px; font-weight: 600; border: 2px solid var(--sun); }
+.btn.primary { background: var(--sun); color: var(--ink); }
+.btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
+
+.fine { padding: 36px 0 56px; color: rgba(255,255,255,.85); font-size: 14.5px; }
+.fine summary { cursor: pointer; color: #fff; font-weight: 600; }
+.fine ul { padding-left: 18px; margin: 10px 0 0; }
+.fine li { margin-bottom: 5px; }
+.credit { margin: 0 0 20px; color: #fff; font-size: 15px; }
+.credit a { font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .progress i, .meter-dot { transition: none; }
+  .sticker.slap { animation: none; }
+}
+</style>
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Pay for LLMs, or buy GPUs?</h1>
+  <p class="lede">Paying OpenAI, Anthropic or Google per token is <b>renting</b>. Running open models on your own GPUs is <b>buying</b>. Five questions, one straight answer. No consultants were harmed.</p>
+</header>
+
+<main class="wrap">
+  <section class="quiz" id="quiz" aria-live="polite">
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <p class="step" id="step"></p>
+    <h2 class="q" id="q"></h2>
+    <p class="hint" id="hint"></p>
+    <div id="body"></div>
+    <div class="quiz-foot">
+      <button class="link-btn" id="back" type="button">Back</button>
+    </div>
+    <div class="meter" aria-hidden="true">
+      <div class="meter-track"><span class="meter-dot" id="dot" style="left:0;opacity:0"></span></div>
+      <div class="meter-labels"><span>Rent</span><span id="tab"></span><span>Buy</span></div>
+    </div>
+  </section>
+</main>
+
+<section class="verdict" id="verdict" hidden aria-live="polite">
+  <div class="wrap">
+    <div class="verdict-top">
+      <div class="sign" aria-hidden="true">
+        <div class="board">
+          <div class="board-band" id="band"></div>
+          <div class="board-body" id="boardBody"></div>
+        </div>
+        <div class="sticker" id="sticker"></div>
+      </div>
+      <div>
+        <h2 class="answer" id="answer"></h2>
+        <p class="answer-say" id="answerSay"></p>
+      </div>
+    </div>
+
+    <div class="verdict-grid">
+      <div>
+        <h3>The monthly tab</h3>
+        <table class="statement" id="statement"></table>
+        <p class="compare" id="compare"></p>
+      </div>
+      <div>
+        <h3>Here's the yarn</h3>
+        <ul class="why" id="why"></ul>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="share" type="button">Copy link to this result</button>
+      <button class="btn ghost" id="restart" type="button">Start over</button>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <section class="fine">
+    <p class="credit">Made by <a href="https://x.com/sharvajethwa" target="_blank" rel="noopener">@sharvajethwa</a> at <a href="https://www.jetbro.in/" target="_blank" rel="noopener">Jetbro</a>.</p>
+    <details>
+      <summary>The fine print (we've read it so you don't have to)</summary>
+      <ul>
+        <li>Token estimate from your bill, blended at three input tokens per output token: OpenAI about $4 per million, Anthropic about $6, Google about $3.</li>
+        <li>An agent run re-reads its context at every step, so we count about 300k tokens per run.</li>
+        <li>Frontier closed models: $10 per million tokens blended. Small closed models: $2. Open-weight models on hosted APIs: $0.60, or 1.5× that for a private deployment in your cloud.</li>
+        <li>GPUs: $2.50 per H100-hour. About 2,500 tokens/s per GPU for a 70B-class model, and 1,200 tokens/s for frontier-size models, which need a full 8-GPU node. Never fewer than 2 GPUs.</li>
+        <li>People: $30k a month if you hire, $10k if platform engineers pick it up, $4k extra if you already run an inference team.</li>
+        <li>GPU hours actually busy: 25% for spiky traffic, 45% for mixed, 70% for 24/7.</li>
+        <li>Sources: <a href="https://epoch.ai/data-insights/open-closed-eci-gap" target="_blank" rel="noopener">Epoch AI</a> (open models trail the frontier by about 4 months), <a href="https://ramp.com/data" target="_blank" rel="noopener">Ramp AI Index</a> (the top 1% of spenders pay for both), <a href="https://www.morphllm.com/llm-api-pricing" target="_blank" rel="noopener">Morph</a>, <a href="https://www.morphllm.com/gemini-api-pricing" target="_blank" rel="noopener">Morph on Gemini</a> and <a href="https://www.spheron.network/blog/h100-price-per-hour-2026/" target="_blank" rel="noopener">Spheron</a> for prices, <a href="https://findstack.com/resources/self-hosted-llm-vs-api-cost" target="_blank" rel="noopener">Findstack</a> for break-even maths.</li>
+      </ul>
+      <p>It's a rough guide to start a conversation, not a quote. Prices move every month.</p>
+    </details>
+  </section>
+</footer>
+
+<script>
+(() => {
+  // ---------- questions ----------
+  const VOLUME = {
+    tokens: [
+      ["Under 100 million", "A chatbot for the marketing team", 5e7],
+      ["100 million to 1 billion", "The whole office is on it", 4e8],
+      ["1 to 10 billion", "It's baked into the product", 4e9],
+      ["10 to 100 billion", "AI is the product", 3e10],
+      ["Over 100 billion", "You're basically a hyperscaler, mate", 2e11],
+    ],
+    agents: [
+      ["Under 50 runs a day", "A few agents doing odd jobs", 30],
+      ["Hundreds a day", "Agents are part of the team", 300],
+      ["Thousands a day", "There's an agent for everything", 3000],
+      ["Tens of thousands a day", "The agents outnumber the staff", 30000],
+    ],
+  };
+  const TOKENS_PER_RUN = 3e5;
+  const BILL = [["OpenAI", 4], ["Anthropic (Claude)", 6], ["Google (Gemini)", 3]]; // blended $ per million tokens
+
+  const QUESTIONS = [
+    { key: "v", q: "How much AI are you chewing through?", hint: "Pick whichever you actually know." },
+    {
+      key: "f", q: "How clever does it need to be?", hint: "Open models trail the best closed ones by about four months.",
+      options: [
+        ["Einstein", "Agents, code, hard reasoning, most of the time"],
+        ["A solid worker", "With the odd brain-buster, about 20%"],
+        ["Pretty basic", "Sort, tag, summarise, extract"],
+      ],
+    },
+    {
+      key: "d", q: "Where's your data allowed to go?", hint: "This one settles more arguments than price does.",
+      options: [
+        ["She'll be right", "Any vendor with a signed DPA"],
+        ["Stays in our cloud", "Bedrock, Vertex, Azure and the like"],
+        ["Never leaves the building", "On-prem, air-gapped, sovereign"],
+      ],
+    },
+    {
+      key: "t", q: "Who's fixing the GPUs at 3am?", hint: "Owning means you mow your own lawn.",
+      options: [
+        ["Nobody", "We'd have to hire someone"],
+        ["A couple of platform folks", "Reluctantly"],
+        ["Our inference team", "Got one, or building one"],
+      ],
+    },
+    {
+      key: "u", q: "What's your traffic like?", hint: "Idle GPUs still cost you rent.",
+      options: [
+        ["Spiky", "9 to 5, plus launch days"],
+        ["A bit of both", "Daytime peak, some overnight jobs"],
+        ["Flat out 24/7", "Batch jobs running all night"],
+      ],
+    },
+  ];
+
+  // ---------- cost model ----------
+  const FRONTIER = [0.8, 0.2, 0.03];
+  const PEOPLE = [30000, 10000, 4000];
+  const UTIL = [0.25, 0.45, 0.7];
+  const DEFAULTS = { v: 4e9, f: 1, d: 0, t: 1, u: 1 };
+  const P = {
+    closedFrontier: 10, closedSmall: 2, openHosted: 0.6, privateMult: 1.5,
+    gpuHr: 2.5, hours: 730, tpsGen: 2500, tpsFront: 1200, minGen: 2, minFront: 8,
+  };
+
+  const answers = { v: null, f: null, d: null, t: null, u: null };
+  let current = 0;
+  let volMode = "tokens";
+  const bill = [0, 0, 0];
+
+  const $ = (id) => document.getElementById(id);
+  // Vercel Web Analytics custom events (recorded on Pro plans; page views are tracked on every plan)
+  const track = (name, data) => { try { window.va("event", { name, data }); } catch {} };
+
+  const money = (n) => {
+    if (n >= 1e6) return "$" + (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M";
+    if (n >= 1e3) return "$" + (n / 1e3).toFixed(n >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "k";
+    return "$" + Math.round(n);
+  };
+  const tokens = (n) => {
+    if (n >= 1e9) return (n / 1e9).toFixed(n >= 1e10 ? 0 : 1).replace(/\.0$/, "") + "B";
+    if (n >= 1e6) return Math.round(n / 1e6) + "M";
+    return Math.round(n / 1e3) + "k";
+  };
+
+  function gpuFor(volume, tps, min, util) {
+    const perGpu = tps * 3600 * P.hours * util;
+    const gpus = Math.max(min, Math.ceil(volume / perGpu));
+    return { gpus, cost: gpus * P.gpuHr * P.hours, busy: volume / (gpus * tps * 3600 * P.hours) };
+  }
+
+  function model(a) {
+    const V = a.v, f = FRONTIER[a.f], data = a.d, people = PEOPLE[a.t], util = UTIL[a.u];
+    const Vf = V * f, Vg = V - Vf;
+    const b = { closed: 0, open: 0, gpu: 0, people: 0 };
+    let route, gpus = 0, busy = 0;
+
+    if (data === 2) {
+      const front = gpuFor(Vf, P.tpsFront, P.minFront, util);
+      const gen = gpuFor(Vg, P.tpsGen, P.minGen, util);
+      b.gpu = front.cost + gen.cost;
+      b.people = people;
+      gpus = front.gpus + gen.gpus;
+      busy = V / ((front.gpus * P.tpsFront + gen.gpus * P.tpsGen) * 3600 * P.hours);
+      route = "gpu";
+    } else {
+      b.closed = Vf * P.closedFrontier / 1e6;
+      const opts = {
+        closed: Vg * P.closedSmall / 1e6,
+        open: Vg * P.openHosted * (data === 1 ? P.privateMult : 1) / 1e6,
+      };
+      const g = gpuFor(Vg, P.tpsGen, P.minGen, util);
+      opts.gpu = g.cost + people;
+      // Another vendor or a GPU fleet only earns its place if it saves real money over the simplest option
+      route = "closed";
+      if (opts.closed - opts.open > 1000) route = "open";
+      if (opts[route] - opts.gpu > 1000) route = "gpu";
+      if (route === "closed") b.closed += opts.closed;
+      if (route === "open") b.open = opts.open;
+      if (route === "gpu") { b.gpu = g.cost; b.people = people; gpus = g.gpus; busy = g.busy; }
+    }
+
+    const total = b.closed + b.open + b.gpu + b.people;
+    const allClosed = data === 2 ? null : (Vf * P.closedFrontier + Vg * P.closedSmall) / 1e6;
+    const allGpu = gpuFor(Vf, P.tpsFront, P.minFront, util).cost + gpuFor(Vg, P.tpsGen, P.minGen, util).cost + people;
+
+    let verdict;
+    if (route === "gpu") verdict = data !== 2 && f >= 0.2 ? "both" : "gpu";
+    else if (route === "open") verdict = f >= 0.8 ? "llm" : "open";
+    else verdict = "llm";
+
+    return { V, Vf, Vg, f, data, util, b, total, route, gpus, busy, allClosed, allGpu, verdict };
+  }
+
+  // Smallest monthly volume at which owning GPUs beats renting per token for everyday work
+  function breakEven(a) {
+    const per = Math.min(P.closedSmall, P.openHosted * (a.d === 1 ? P.privateMult : 1));
+    for (let e = 7; e <= 12.5; e += 0.05) {
+      const v = Math.pow(10, e);
+      if (gpuFor(v, P.tpsGen, P.minGen, UTIL[a.u]).cost + PEOPLE[a.t] < v * per / 1e6) return v;
+    }
+    return null;
+  }
+
+  const filled = () => Object.fromEntries(Object.keys(answers).map((k) => [k, answers[k] ?? DEFAULTS[k]]));
+  const allAnswered = () => Object.values(answers).every((x) => x !== null);
+
+  // ---------- quiz rendering ----------
+  function optionList(list, selected) {
+    return `<div class="options" role="group">` + list.map(([label, sub], i) =>
+      `<button type="button" class="opt" data-i="${i}" aria-pressed="${selected === i}"><b>${label}</b><small>${sub}</small></button>`
+    ).join("") + `</div>`;
+  }
+
+  function renderQuestion() {
+    const Q = QUESTIONS[current];
+    $("progress").innerHTML = QUESTIONS.map((q) => `<i class="${answers[q.key] !== null ? "done" : ""}"></i>`).join("");
+    $("step").textContent = `${current + 1} of ${QUESTIONS.length}`;
+    $("q").textContent = Q.q;
+    $("hint").textContent = Q.hint;
+    $("back").disabled = current === 0;
+
+    if (Q.key !== "v") {
+      $("body").innerHTML = optionList(Q.options, answers[Q.key]);
+      return;
+    }
+    const tabs = [["tokens", "Tokens"], ["bill", "Our AI bill"], ["agents", "Agents"]];
+    let html = `<div class="tabs" role="tablist">` + tabs.map(([k, l]) =>
+      `<button type="button" class="tab" role="tab" data-mode="${k}" aria-selected="${volMode === k}">${l}</button>`
+    ).join("") + `</div>`;
+    if (volMode === "bill") {
+      html += `<div class="bill">` + BILL.map(([name], i) =>
+        `<label>${name}<span class="money-in"><span>$</span><input type="number" inputmode="numeric" min="0" step="100" placeholder="0" data-b="${i}" value="${bill[i] || ""}" aria-label="${name} monthly spend in US dollars"><span>/mo</span></span></label>`
+      ).join("") + `</div><div class="bill-out"><p id="billOut"></p><button type="button" class="go" id="billGo">That's us</button></div>`;
+    } else {
+      const sel = VOLUME[volMode].findIndex((o) => volFor(volMode, o[2]) === answers.v);
+      html += optionList(VOLUME[volMode], sel);
+    }
+    $("body").innerHTML = html;
+    if (volMode === "bill") updateBill();
+  }
+
+  const volFor = (mode, x) => (mode === "agents" ? x * TOKENS_PER_RUN * 30 : x);
+
+  function billTokens() {
+    return BILL.reduce((sum, [, price], i) => sum + (bill[i] || 0) / price * 1e6, 0);
+  }
+
+  function updateBill() {
+    const t = billTokens();
+    $("billOut").innerHTML = t > 0 ? `That's roughly <b>${tokens(t)} tokens a month</b>.` : "Pop in what you spend each month.";
+    $("billGo").disabled = t <= 0;
+  }
+
+  function advance(viaKeyboard) {
+    updateMeter();
+    setTimeout(() => {
+      if (current < QUESTIONS.length - 1) {
+        current++;
+        renderQuestion();
+        if (viaKeyboard) focusFirst();
+      } else {
+        renderQuestion();
+        reveal(true);
+      }
+    }, 300);
+  }
+
+  $("body").addEventListener("click", (e) => {
+    const tab = e.target.closest(".tab");
+    if (tab) { volMode = tab.dataset.mode; renderQuestion(); $("body").querySelector(`[data-mode="${volMode}"]`).focus(); return; }
+
+    if (e.target.closest("#billGo")) {
+      answers.v = billTokens();
+      track("answer", { question: "v", answer: "bill " + tokens(answers.v) });
+      advance(e.detail === 0);
+      return;
+    }
+
+    const btn = e.target.closest(".opt");
+    if (!btn) return;
+    const i = +btn.dataset.i;
+    const Q = QUESTIONS[current];
+    answers[Q.key] = Q.key === "v" ? volFor(volMode, VOLUME[volMode][i][2]) : i;
+    track("answer", { question: Q.key, answer: (Q.key === "v" ? volMode + " " : "") + (Q.options || VOLUME[volMode])[i][0] });
+    $("body").querySelectorAll(".opt").forEach((b) => b.setAttribute("aria-pressed", b === btn));
+    advance(e.detail === 0);
+  });
+
+  $("body").addEventListener("input", (e) => {
+    if (!e.target.dataset.b) return;
+    bill[+e.target.dataset.b] = Math.max(0, +e.target.value || 0);
+    updateBill();
+  });
+
+  $("back").addEventListener("click", () => {
+    if (current > 0) { current--; renderQuestion(); focusFirst(); }
+  });
+
+  function focusFirst() {
+    const el = $("body").querySelector('[aria-pressed="true"]') || $("body").querySelector(".opt, .tab");
+    el && el.focus({ preventScroll: true });
+  }
+
+  function updateMeter() {
+    const any = Object.values(answers).some((x) => x !== null);
+    if (!any) { $("dot").style.opacity = 0; $("tab").textContent = ""; return; }
+    const m = model(filled());
+    const own = (m.b.gpu + m.b.people) / m.total;
+    $("dot").style.opacity = 1;
+    $("dot").style.left = (4 + own * 92) + "%";
+    $("tab").innerHTML = `Your tab: <b>${money(m.total)}/mo</b>`;
+  }
+
+  // ---------- verdict ----------
+  const VERDICTS = {
+    llm: {
+      band: "FOR LEASE", sticker: "LEASED", body: "Closed LLM APIs. Pay per token. No lawn to mow.",
+      answer: "Keep renting, mate.",
+      say: "You're not big enough to buy yet. GPUs would sit round doing nothing, like a tradie waiting on a delivery. Pay per token and get on with it.",
+    },
+    open: {
+      band: "SHARE HOUSE", sticker: "ROOM FOUND", body: "Open-weight models on someone else's GPUs.", gum: true,
+      answer: "Get a share house.",
+      say: "Run open-weight models on someone else's GPUs. Cheaper rent, same postcode, and nobody's asking you to fix the hot water.",
+    },
+    both: {
+      band: "RENT + BUY", sticker: "SPLIT", body: "Closed models for the hard stuff. Your own GPUs for the grunt work.",
+      answer: "Rent in town, buy the beach shack.",
+      say: "The clever stuff goes to the frontier models. The bulk work runs on your own GPUs. That's what the big end of town does.",
+    },
+    gpu: {
+      band: "FOR SALE", sticker: "SOLD", body: "Your own GPUs running open-weight models.",
+      answer: "Sold. Buy the GPUs.",
+      say: "You've got the volume to keep them flat out. Mortgage, maintenance and 3am callouts included.",
+    },
+  };
+
+  function reveal(scroll) {
+    const a = filled();
+    const m = model(a);
+    const v = VERDICTS[m.verdict];
+    const airgap = m.data === 2;
+
+    $("band").textContent = v.band;
+    $("band").className = "board-band" + (v.gum ? " gum" : "");
+    $("boardBody").textContent = v.body;
+    const st = $("sticker");
+    st.textContent = v.sticker;
+    st.classList.remove("slap"); void st.offsetWidth; st.classList.add("slap");
+    $("answer").textContent = airgap ? "Sold. You were always buying." : v.answer;
+    $("answerSay").textContent = airgap
+      ? "Your data can't leave the building, so the maths never got a vote. Your own GPUs, open-weight models, and someone on call."
+      : v.say;
+
+    const rows = [];
+    if (m.b.closed) rows.push(["Closed model APIs", m.route === "closed" ? "Everything, per token" : `The ${Math.round(m.f * 100)}% that needs the smart models`, m.b.closed]);
+    if (m.b.open) rows.push(["Open-weight model APIs", m.data === 1 ? "Private deployment in your cloud" : "Together, Fireworks, DeepInfra and mates", m.b.open]);
+    if (m.b.gpu) rows.push([`${m.gpus} GPUs`, `Busy about ${Math.round(Math.min(m.busy, 1) * 100)}% of the time`, m.b.gpu]);
+    if (m.b.people) rows.push(["People to run them", ["A new hire", "Your platform folks' time", "Extra load on the inference team"][a.t], m.b.people]);
+    $("statement").innerHTML = rows.map(([x, y, n]) => `<tr><td>${x}<small>${y}</small></td><td>${money(n)}</td></tr>`).join("") +
+      `<tr class="total"><td>Per month, for ${tokens(m.V)} tokens</td><td>${money(m.total)}</td></tr>`;
+
+    const cmp = [];
+    if (m.allClosed !== null && m.route !== "closed") cmp.push(`All rented: <b>${money(m.allClosed)}</b>.`);
+    if (m.route !== "gpu" || m.verdict === "both") cmp.push(`All on your own GPUs, open models doing the clever bits too: <b>${money(m.allGpu)}</b>.`);
+    $("compare").innerHTML = cmp.join(" ");
+
+    $("why").innerHTML = whyList(m, a).map((t) => `<li>${t}</li>`).join("");
+
+    $("verdict").hidden = false;
+    track(scroll ? "verdict" : "shared_result_opened", { verdict: m.verdict, tokens: tokens(m.V) });
+    history.replaceState(null, "", `#v=${Math.round(a.v).toExponential(2).replace("+", "")}&a=${a.f}${a.d}${a.t}${a.u}`);
+    if (scroll) $("verdict").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+
+  function whyList(m, a) {
+    const out = [];
+    const be = breakEven(a);
+    if (m.data === 2) {
+      out.push("Closed APIs are off the table, so you're running open models. They're about four months behind the best, so plan regular upgrades.");
+      if (a.t === 0) out.push("Hire an inference engineer before the GPUs turn up. Nobody wants a $30k space heater.");
+      return out;
+    }
+    if (m.f >= 0.2) out.push(`Open models are about four months behind the best closed ones. That gap bites on agents and hard reasoning, so your clever ${Math.round(m.f * 100)}% stays rented.`);
+    if (m.route === "closed") out.push(`About ${tokens(m.Vg)} tokens a month of everyday work won't keep two GPUs busy. A small closed model costs less than one engineer's arvo.`);
+    if (m.route === "open") out.push(`Open models on hosted APIs cost about ${Math.round(P.closedSmall / (P.openHosted * (m.data === 1 ? P.privateMult : 1)))}× less than small closed ones. No hardware, no on-call.`);
+    if (m.route === "gpu") out.push(`Your grunt work keeps ${m.gpus} GPUs about ${Math.round(Math.min(m.busy, 1) * 100)}% busy. At that load you pay less per token than any API, even counting the people.`);
+    if (m.util === UTIL[0] && m.route !== "gpu") out.push("Spiky traffic means GPUs sitting idle half the day. Per-token pricing soaks up the peaks for you.");
+    out.push(be
+      ? `Buying starts paying off at about <b>${tokens(be)} tokens a month</b> for your setup. You're at ${tokens(m.Vg)}${m.Vg >= be ? ", so you're past it." : "."}`
+      : "With your team and traffic, buying <b>never</b> beats renting, at any volume. Idle hours eat the savings.");
+    if (m.b.closed > 200000) out.push(`${money(m.b.closed)} a month on frontier models is serious coin. Test the best open models on your actual tasks. Four months behind might be fine for a 7× cheaper bill.`);
+    return out;
+  }
+
+  // ---------- share + restart ----------
+  $("share").addEventListener("click", async () => {
+    const btn = $("share");
+    track("link_copied", { result: location.hash });
+    try { await navigator.clipboard.writeText(location.href); btn.textContent = "Copied. Go on, share it"; }
+    catch { btn.textContent = "Copy it from the address bar"; }
+    setTimeout(() => (btn.textContent = "Copy link to this result"), 2400);
+  });
+
+  $("restart").addEventListener("click", () => {
+    track("start_over");
+    Object.keys(answers).forEach((k) => (answers[k] = null));
+    bill.fill(0);
+    volMode = "tokens";
+    current = 0;
+    $("verdict").hidden = true;
+    history.replaceState(null, "", location.pathname + location.search);
+    renderQuestion();
+    updateMeter();
+    $("quiz").scrollIntoView({ behavior: "smooth", block: "start" });
+    focusFirst();
+  });
+
+  // ---------- boot ----------
+  const hash = location.hash.match(/^#v=([\d.]+e\d+)&a=([0-2])([0-2])([0-2])([0-2])$/);
+  if (hash && +hash[1] > 0) {
+    answers.v = +hash[1];
+    ["f", "d", "t", "u"].forEach((k, i) => (answers[k] = +hash[i + 2]));
+    current = QUESTIONS.length - 1;
+  }
+  renderQuestion();
+  updateMeter();
+  if (allAnswered()) reveal(false);
+})();
+</script>
+</body>
+</html>
